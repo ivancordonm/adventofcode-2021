@@ -17,7 +17,20 @@ def readConnetions(filename):
     return c
 
 
-def recursive_paths(cons, exclude, path):
+def is_excluded(element, exclude, max_exclude):
+    if max_exclude == 1:
+        return element[0] in exclude or element[1] in exclude
+    else:
+        if len(exclude) > 0:
+            max_elemnt = max(set(exclude), key=exclude.count)
+            if exclude.count(max_elemnt) > 1:
+                return element[0] in exclude or element[1] in exclude
+            else:
+                return element[0] in exclude and element[1] in exclude
+        return False
+
+
+def recursive_paths(cons, exclude, path, n):
     c = path[-1][1]
     if c == 'End':
         paths.append(path)
@@ -25,25 +38,27 @@ def recursive_paths(cons, exclude, path):
     for elem in cons:
         if elem[0] == 'Start':
             continue
-        if (elem[0] == c and elem[0] not in exclude and elem[1] not in exclude) or (elem[0] == c and elem[1] == 'End'):
+        if (elem[0] == c and not is_excluded(elem, exclude, n)) or (elem[0] == c and elem[1] == 'End'):
             if elem[0][0].islower():
-                recursive_paths(cons, exclude + [elem[0]], path + [elem])
+                recursive_paths(cons, exclude + [elem[0]], path + [elem], n)
             else:
-                recursive_paths(cons, exclude, path + [elem])
+                recursive_paths(cons, exclude, path + [elem], n)
 
 
-def find_paths(conections):
+def find_paths(conections, n=1):
     for c in conections:
         if c[0] == 'Start':
             conections_copy = conections.copy()
-            recursive_paths(conections_copy, [], [c])
+            recursive_paths(conections_copy, [], [c], n)
 
 
 if __name__ == '__main__':
     conections = readConnetions("input.txt")
+
     paths = []
     find_paths(conections)
-    # for p in paths:
-    #     print(p)
-
     print("Part 1: ", len(paths))
+
+    paths = []
+    find_paths(conections, 2)
+    print("Part 2: ", len(paths))
