@@ -1,0 +1,4 @@
+CBCBCBC
+
+CB -> A
+BC -> A
