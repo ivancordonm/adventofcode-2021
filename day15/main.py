@@ -1,7 +1,7 @@
+import heapq as heap
 import sys
+from collections import defaultdict
 from copy import deepcopy
-from math import inf
-from queue import PriorityQueue
 
 
 def read_cavern(filename):
@@ -45,29 +45,30 @@ def neighbors(p, max_i, max_j):
 
 
 def calculate_min_dijsktra(cavern_, start=(0, 0)):
+    visited = set()
+    parents = {}
+    pq = []
+    nodeCosts = defaultdict(lambda: float('inf'))
+    nodeCosts[start] = 0
+    heap.heappush(pq, (0, start))
 
-    D = {(i, j): inf for i in range(len(cavern_)) for j in range(len(cavern_[i]))}
-
-    D[start] = 0
-    visited = []
-    pq = PriorityQueue()
-    pq.put((0, start))
     print("Len cavern: ", len(cavern_) * len(cavern_[0]))
-    while not pq.empty():
-        (dist, current_vertex) = pq.get()
-        visited.append(current_vertex)
-        if len(visited) % 1000 == 0:
-            print(len(visited))
+    while pq:
+        _, current_vertex = heap.heappop(pq)
+        visited.add(current_vertex)
+        # if len(visited) % 1000 == 0:
+        #     print(len(visited))
         for neighbor in neighbors(current_vertex, len(cavern_), len(cavern_[0])):
             distance = cavern_[neighbor[0]][neighbor[1]]
             if neighbor not in visited:
-                old_cost = D[neighbor]
-                new_cost = D[current_vertex] + distance
+                old_cost = nodeCosts[neighbor]
+                new_cost = nodeCosts[current_vertex] + distance
                 if new_cost < old_cost:
-                    D[neighbor] = new_cost
-                    pq.put((new_cost, neighbor))
+                    parents[neighbor] = current_vertex
+                    nodeCosts[neighbor] = new_cost
+                    heap.heappush(pq, (new_cost, neighbor))
 
-    return D
+    return nodeCosts, parents
 
 
 def concat_h(h_cavern, p_cavern):
@@ -115,13 +116,13 @@ def get_full_cavern(cavern_, s):
 
 if __name__ == '__main__':
     cavern = read_cavern("input.txt")
-    d = calculate_min_dijsktra(cavern)
-    goal = (len(cavern) - 1, len(cavern[0]) - 1)
-    min = calculate_min(cavern)
-    print(min)
-    # for vertex in d:
-    #     print("Distance from vertex 0 to vertex", vertex, "is", d[vertex])
+    d, p = calculate_min_dijsktra(cavern)
     print("Minimum cost is", d[(len(cavern) - 1, len(cavern[0]) - 1)])
+
+    # goal = (len(cavern) - 1, len(cavern[0]) - 1)
+    # min = calculate_min(cavern)
+    # print(min)
+
     full_cavern = get_full_cavern(cavern, 5)
-    d = calculate_min_dijsktra(full_cavern)
+    d, p = calculate_min_dijsktra(full_cavern)
     print("Minimum cost is", d[(len(cavern) - 1, len(cavern[0]) - 1)])
