@@ -59,7 +59,7 @@ def tr(t):
         return 'eq'
 
 
-def calculate(idx, op):
+def calculate(idx, stack):
     l_idx = 0
     # version
     v = int(transmision_b[idx + l_idx:idx + l_idx + 3], 2)
@@ -71,15 +71,17 @@ def calculate(idx, op):
     # literal
     if t == 4:
         last = False
-        n = 0
+        n = ''
         i = 0
         while not last:
             last = transmision_b[idx + l_idx] == '0'
             l_idx += 1
-            n += 10 ** i * int(transmision_b[idx + l_idx:idx + l_idx + 4], 2)
+            n += transmision_b[idx + l_idx:idx + l_idx + 4]
             l_idx += 4
-        return l_idx, op + [n]
+        int_n = int(n, 2)
+        return l_idx, stack + [int_n], 1
     else:
+        nelem = 0
         type_length = transmision_b[idx + l_idx]
         if type_length == '0':
             l_idx += 1
@@ -87,77 +89,74 @@ def calculate(idx, op):
             processed = 0
             l_idx += 15
             while processed < length:
-                p, op = calculate(idx + l_idx, op)
+                p, stack, n = calculate(idx + l_idx, stack)
+                nelem += n
                 l_idx += p
                 processed += p
-            return l_idx, op + [tr(t)]
+            return l_idx, prn(stack, nelem, tr(t)), 1
         else:
             l_idx += 1
             packets = int(transmision_b[idx + l_idx:idx + l_idx + 11], 2)
             l_idx += 11
             processed = 0
             for i in range(packets):
-                p, op = calculate(idx + l_idx, op)
+                p, stack, n = calculate(idx + l_idx, stack)
+                nelem += n
                 l_idx += p
                 processed += p
-            return l_idx, op + [tr(t)]
+            return l_idx, prn(stack, nelem, tr(t)), 1
 
 
-def prn(op):
-    stack = []
-    n = 0
-    for elem in op:
-        if type(elem) == int:
-            stack.append(elem)
-            n += 1
+def prn(stack, n, type_op):
+    pt = []
+    if type_op == 'sum':
+        total = 0
+        for i in range(n):
+            total += stack.pop()
+        stack.append(total)
+    elif type_op == 'mul':
+        total = 1
+        for i in range(n):
+            total *= stack.pop()
+        stack.append(total)
+    elif type_op == 'min':
+        for i in range(n):
+            pt.append(stack.pop())
+        total = min(pt)
+        stack.append(total)
+    elif type_op == 'max':
+        for i in range(n):
+            pt.append(stack.pop())
+        total = max(pt)
+        stack.append(total)
+    elif type_op == 'gt':
+        if stack.pop() < stack.pop():
+            total = 1
         else:
-            pt = []
-            if elem == 'sum':
-                total = 0
-                while n > 0:
-                    total += stack.pop()
-                    n -= 1
-                stack.append(total)
-            elif elem == 'mul':
-                total = 1
-                while n > 0:
-                    total *= stack.pop()
-                    n -= 1
-                stack.append(total)
-            elif elem == 'min':
-                while n > 0:
-                    pt.append(stack.pop())
-                    n -= 1
-                stack.append(min(pt))
-            elif elem == 'max':
-                while len(stack) > 0:
-                    pt.append(stack.pop())
-                stack.append(max(pt))
-            elif elem == 'gt':
-                if stack.pop() < stack.pop():
-                    stack.append(1)
-                else:
-                    stack.append(0)
-            elif elem == 'lt':
-                if stack.pop() > stack.pop():
-                    stack.append(1)
-                else:
-                    stack.append(0)
-            elif elem == 'eq':
-                if stack.pop() == stack.pop():
-                    stack.append(1)
-                else:
-                    stack.append(0)
-    return stack[0]
+            total = 0
+        stack.append(total)
+    elif type_op == 'lt':
+        if stack.pop() > stack.pop():
+            total = 1
+        else:
+            total = 0
+        stack.append(total)
+    elif type_op == 'eq':
+        if stack.pop() == stack.pop():
+            total = 1
+        else:
+            total = 0
+        stack.append(total)
+    return stack
 
 
 if __name__ == '__main__':
-    transmision = read_input('test.txt')
+    transmision = read_input('input.txt')
     transmision_b = ''.join([bin(int(x, 16))[2:].zfill(4) for x in transmision])
     # print(transmision_b)
     #
     # version, _ = analize_packet(0, [])
     # print(sum(version))
 
-    _, operations = calculate(0, [])
-    print(prn(operations))
+    _, operations, _ = calculate(0, [])
+    print(operations[0])
