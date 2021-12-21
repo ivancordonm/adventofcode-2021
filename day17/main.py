@@ -24,10 +24,10 @@ def out_of_target(x, y):
 
 
 def launch_probe():
-    res = (0, 0)
+    res = 0
     highest_y = -sys.maxsize
-    for i in range(200):
-        for j in range(200):
+    for i in range(300):
+        for j in range(300):
             x, y = 0, 0
             i_ = i
             j_ = j
@@ -47,6 +47,30 @@ def launch_probe():
     return res
 
 
+def launch_all_probe_posibilities():
+    all_posibilities = []
+    for i in range(500):
+        # if i % 10 == 0:
+        #     print(i)
+        for j in range(-100,500):
+            # print(i, j)
+            x, y = 0, 0
+            i_ = i
+            j_ = j
+            while not out_of_target(x, y):
+                if in_target(x, y):
+                    all_posibilities.append((i, j))
+                    break
+                x += i_
+                y += j_
+                if i_ > 0:
+                    i_ -= 1
+                j_ -= 1
+    return all_posibilities
+
+
 if __name__ == '__main__':
     target = read_input('input.txt')
-    print(launch_probe())
+    # print(launch_probe())
+    print(launch_all_probe_posibilities())
+    print(len(launch_all_probe_posibilities()))
